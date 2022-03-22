@@ -4,9 +4,6 @@
     returnVariable="userDetails">
 </cfinvoke>
 
-<cfif structKeyExists(form, "upload")>
-    
-</cfif>
 
 <!DOCTYPE html>
 <html lang="en">

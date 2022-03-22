@@ -27,8 +27,9 @@ component{
         cfcontent( variable=SpreadSheetReadBinary(mySheet), type="application/vnd.ms-excel" );
     }
 
+    
     public function addData(required file){
-        cffile( fileField="form.file", nameconflict="overwrite", destination="E:\ColdFusion\cfusion\wwwroot\UserDetails\Excel", action="upload", result="uploadFile" );
+        cffile( fileField="#arguments.file#", nameconflict="overwrite", destination="E:\ColdFusion\cfusion\wwwroot\UserDetails\Excel", action="upload", result="uploadFile" );
         var filePath = "#uploadFile.serverDirectory#\#uploadFile.clientFile#";
 
         cfspreadsheet( action="read", src="#filePath#", excludeheaderrow="true", headerrow=1, query="excelData" );
@@ -75,26 +76,8 @@ component{
                     else{
                         result.status = "Success";
                     }
-
-                    var insertData = queryExecute("INSERT into Users 
-                    (FirstName, LastName, Address, Email, Phone, DOB, Role) 
-                    Values 
-                    (:fName, :lName, :address, :email, :phone, :DOB, :Role)",
-                    {
-                        fName={cfsqltype:"cf_sql_nvarchar", value:fName},
-                        lName={cfsqltype:"cf_sql_nvarchar", value:lName},
-                        address={cfsqltype:"cf_sql_nvarchar", value:address},
-                        email={cfsqltype:"cf_sql_nvarchar", value:email},
-                        phone={cfsqltype:"cf_sql_nvarchar", value:phone},
-                        DOB={cfsqltype:"cf_sql_nvarchar", value:DOB},
-                        Role={cfsqltype:"cf_sql_nvarchar", value:Role},
-                    }, {result="addUserResult"});
-                }
-                else{
-                    
                 }
             }
         }
     }
-
 }
