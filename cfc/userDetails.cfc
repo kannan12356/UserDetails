@@ -60,133 +60,101 @@ component{
             var DOB = excelData["DOB"];
             DOB = dateFormat(DOB, "YYYY-mm-dd");
             var Role = excelData["Role"];
-            
-            if(Email != ""){
-                var emailCheck = queryExecute("Select * from Users Where Email = :email",
-                {
-                    email={cfsqltype:"cf_sql_nvarchar", value:email}
-                }, {result="emailCheckResult"});
 
-                var recordCount = emailCheckResult.recordCount;
+            if(FirstName != "" OR LastName != "" OR Address != "" OR Email != "" OR Phone != "" OR DOB != "" OR Role != ""){
+                userDetail.FirstName = FirstName;
+                userDetail.LastName = LastName;
+                userDetail.Address = Address;
+                userDetail.Email = Email;
+                userDetail.Phone = Phone;
+                userDetail.DOB = dateFormat(DOB, "dd-mm-YYYY");
+                userDetail.Role = Role;
                 
-                if(recordCount == 0){
+                if(Email != ""){
+                    var emailCheck = queryExecute("Select * from Users Where Email = :email",
+                    {
+                        email={cfsqltype:"cf_sql_nvarchar", value:email}
+                    }, {result="emailCheckResult"});
 
-                    if(FirstName == ""){
-                        var fNameErrorAdd = arrayAppend(result, "First name is missing");
-                    }
-                    if(LastName == ""){
-                        var lNameErrorAdd = arrayAppend(result, "Last name is missing");
-                    }
-                    if(Address == ""){
-                        var addressErrorAdd = arrayAppend(result, "address is missing");
-                    }
-                    if(Phone == ""){
-                        var phoneErrorAdd = arrayAppend(result, "phone is missing");
-                    }
-                    if(DOB == ""){
-                        var DOBErrorAdd = arrayAppend(result, "DOB is missing");
-                    }
-                    if(Role == ""){
-                        var RoleErrorAdd = arrayAppend(result, "Role is missing");
-                    }
-                    if(FirstName != "" AND LastName != "" AND Address != "" AND Phone != "" AND DOB != "" AND Role != ""){
-                        var statusErrorAdd = arrayAppend(result, "Added");
+                    var recordCount = emailCheckResult.recordCount;
+                    
+                    if(recordCount == 0){
 
-                        var RoleArray = listToArray(Role);
-
-                        var Roles = arrayNew(1);
-
-                        for(i=1; i<=arrayLen(RoleArray); i++){
-                            var roleCheck = queryExecute("Select * from Roles Where Role = :role",
-                            {
-                                role={cfsqltype:"cf_sql_nvarchar", value:RoleArray[i]}
-                            }, {result="roleCheckResult"});
-
-                            if(roleCheckResult.recordCount == 1){
-                                arrayAppend(Roles, RoleArray[i]);
-                            }
+                        if(FirstName == ""){
+                            var fNameErrorAdd = arrayAppend(result, "First name is missing");
                         }
-                        
-                        Role = arrayToList(Roles, ",");
+                        if(LastName == ""){
+                            var lNameErrorAdd = arrayAppend(result, "Last name is missing");
+                        }
+                        if(Address == ""){
+                            var addressErrorAdd = arrayAppend(result, "address is missing");
+                        }
+                        if(Phone == ""){
+                            var phoneErrorAdd = arrayAppend(result, "phone is missing");
+                        }
+                        if(DOB == ""){
+                            var DOBErrorAdd = arrayAppend(result, "DOB is missing");
+                        }
+                        if(Role == ""){
+                            var RoleErrorAdd = arrayAppend(result, "Role is missing");
+                        }
+                        if(FirstName != "" AND LastName != "" AND Address != "" AND Phone != "" AND DOB != "" AND Role != ""){
+                            var statusErrorAdd = arrayAppend(result, "Success");
 
-                        var insertData = queryExecute("INSERT into Users 
-                        (FirstName, LastName, Address, Email, Phone, DOB, Role) 
-                        Values 
-                        (:fName, :lName, :address, :email, :phone, :DOB, :Role)",
-                        {
-                            fName={cfsqltype:"cf_sql_nvarchar", value:FirstName},
-                            lName={cfsqltype:"cf_sql_nvarchar", value:LastName},
-                            address={cfsqltype:"cf_sql_nvarchar", value:Address},
-                            email={cfsqltype:"cf_sql_nvarchar", value:Email},
-                            phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
-                            DOB={cfsqltype:"cf_sql_date", value:DOB},
-                            Role={cfsqltype:"cf_sql_nvarchar", value:Role}
-                        }, {result="addUserResult"});                        
+                            var RoleArray = listToArray(Role);
+
+                            var Roles = arrayNew(1);
+
+                            for(i=1; i<=arrayLen(RoleArray); i++){
+                                var roleCheck = queryExecute("Select * from Roles Where Role = :role",
+                                {
+                                    role={cfsqltype:"cf_sql_nvarchar", value:RoleArray[i]}
+                                }, {result="roleCheckResult"});
+
+                                if(roleCheckResult.recordCount == 1){
+                                    arrayAppend(Roles, RoleArray[i]);
+                                }
+                            }
+                            
+                            Role = arrayToList(Roles, ",");
+
+                            var insertData = queryExecute("INSERT into Users 
+                            (FirstName, LastName, Address, Email, Phone, DOB, Role) 
+                            Values 
+                            (:fName, :lName, :address, :email, :phone, :DOB, :Role)",
+                            {
+                                fName={cfsqltype:"cf_sql_nvarchar", value:FirstName},
+                                lName={cfsqltype:"cf_sql_nvarchar", value:LastName},
+                                address={cfsqltype:"cf_sql_nvarchar", value:Address},
+                                email={cfsqltype:"cf_sql_nvarchar", value:Email},
+                                phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
+                                DOB={cfsqltype:"cf_sql_date", value:DOB},
+                                Role={cfsqltype:"cf_sql_nvarchar", value:Role}
+                            }, {result="addUserResult"});                        
+                        }
+
+                        userDetail.Result = arrayToList(result, ", ");
                     }
-                    
-                    userDetail.FirstName = FirstName;
-                    userDetail.LastName = LastName;
-                    userDetail.Address = Address;
-                    userDetail.Email = Email;
-                    userDetail.Phone = Phone;
-                    userDetail.DOB = dateFormat(DOB, "dd-mm-YYYY");
-                    userDetail.Role = Role;
-                    userDetail.Result = arrayToList(result, ", ");
-                    
-                    addArray = arrayAppend(data, userDetail);
+                    else{
+                        var statusErrorAdd = arrayAppend(result, "Email already existed");                        
+                        userDetail.Result = arrayToList(result, ", ");
+                    }
                 }
                 else{
-                    if(FirstName != "" AND LastName != "" AND Address != "" AND Phone != "" AND DOB != "" AND Role != ""){
-                        var statusErrorAdd = arrayAppend(result, "Updated");
-
-                        var RoleArray = listToArray(Role);
-
-                        var Roles = arrayNew(1);
-
-                        for(i=1; i<=arrayLen(RoleArray); i++){
-                            var roleCheck = queryExecute("Select * from Roles Where Role = :role",
-                            {
-                                role={cfsqltype:"cf_sql_nvarchar", value:RoleArray[i]}
-                            }, {result="roleCheckResult"});
-
-                            if(roleCheckResult.recordCount == 1){
-                                arrayAppend(Roles, RoleArray[i]);
-                            }
-                        }
-                        
-                        Role = arrayToList(Roles, ", ");
-
-                        var updateData = queryExecute("Update Users SET 
-                        FirstName = :fName, LastName = :lName, Address = :address, Email = :email, 
-                        Phone = :phone, DOB = :DOB, Role = :Role WHERE Email = :email",
-                        {
-                            fName={cfsqltype:"cf_sql_nvarchar", value:FirstName},
-                            lName={cfsqltype:"cf_sql_nvarchar", value:LastName},
-                            address={cfsqltype:"cf_sql_nvarchar", value:Address},
-                            email={cfsqltype:"cf_sql_nvarchar", value:Email},
-                            phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
-                            DOB={cfsqltype:"cf_sql_date", value:DOB},
-                            Role={cfsqltype:"cf_sql_nvarchar", value:Role}
-                        }, {result="updateUserResult"});                        
-                    }
-
-                    userDetail.FirstName = FirstName;
-                    userDetail.LastName = LastName;
-                    userDetail.Address = Address;
-                    userDetail.Email = Email;
-                    userDetail.Phone = Phone;
-                    userDetail.DOB = dateFormat(DOB, "dd-mm-YYYY");
-                    userDetail.Role = Role;
+                    var statusErrorAdd = arrayAppend(result, "Email id required");
                     userDetail.Result = arrayToList(result, ", ");
-                    
-                    addArray = arrayAppend(data, userDetail);
-                }
-            }
+                }    
+            }            
+            addArray = arrayAppend(data, userDetail);
         }
 
         cffile( action="delete", file=filePath );
 
         data = arrayToQuery(data);
+
+        data.sort(function(obj1, obj2){
+            return compare(obj1.Result, obj2.Result);
+        })
 
         var mySheet = SpreadsheetNew("UserDetails",true);
         SpreadSheetAddRow(mySheet,"First Name,Last Name,Address,Email,Phone,DOB,Role,Result");
@@ -202,15 +170,17 @@ component{
             var DOB = data["DOB"];
             var Role = data["Role"];
             var Result = data["Result"];
-            spreadsheetSetCellValue(mySheet, FirstName, i+1, 1)
-            spreadsheetSetCellValue(mySheet, LastName, i+1, 2)
-            spreadsheetSetCellValue(mySheet, Address, i+1, 3)
-            spreadsheetSetCellValue(mySheet, Email, i+1, 4)
-            spreadsheetSetCellValue(mySheet, Phone, i+1, 5)
-            spreadsheetSetCellValue(mySheet, DOB, i+1, 6)
-            spreadsheetSetCellValue(mySheet, Role, i+1, 7)
-            spreadsheetSetCellValue(mySheet, Result, i+1, 8)
-            i++
+            if(FirstName != "" OR LastName != "" OR Address != "" OR Email != "" OR Phone != "" OR DOB != "" OR Role != ""){
+                spreadsheetSetCellValue(mySheet, FirstName, i+1, 1)
+                spreadsheetSetCellValue(mySheet, LastName, i+1, 2)
+                spreadsheetSetCellValue(mySheet, Address, i+1, 3)
+                spreadsheetSetCellValue(mySheet, Email, i+1, 4)
+                spreadsheetSetCellValue(mySheet, Phone, i+1, 5)
+                spreadsheetSetCellValue(mySheet, DOB, i+1, 6)
+                spreadsheetSetCellValue(mySheet, Role, i+1, 7)
+                spreadsheetSetCellValue(mySheet, Result, i+1, 8)
+                i++
+            }
         }
 
         cfheader( name="Content-Disposition", value="inline;filename=Upload_Result.xlsx" );
