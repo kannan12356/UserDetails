@@ -187,14 +187,33 @@ component{
         cffile( action="delete", file=filePath );
 
         data = arrayToQuery(data);
-        
+
         var mySheet = SpreadsheetNew("UserDetails",true);
-        SpreadSheetAddRow(mySheet,"FirstName,LastName,Address,Email,Phone,DOB,Role,Result");
+        SpreadSheetAddRow(mySheet,"First Name,Last Name,Address,Email,Phone,DOB,Role,Result");
         SpreadsheetFormatRow(mySheet, {'bold' : 'true'}, 1);
-        SpreadSheetAddRows(mySheet,data);   
+        
+        var i = 1
+        cfoutput( query="data" ){
+            var FirstName = data["FirstName"];
+            var LastName = data["LastName"];
+            var Address = data["Address"];
+            var Email = data["Email"];
+            var Phone = data["Phone"];
+            var DOB = data["DOB"];
+            var Role = data["Role"];
+            var Result = data["Result"];
+            spreadsheetSetCellValue(mySheet, FirstName, i+1, 1)
+            spreadsheetSetCellValue(mySheet, LastName, i+1, 2)
+            spreadsheetSetCellValue(mySheet, Address, i+1, 3)
+            spreadsheetSetCellValue(mySheet, Email, i+1, 4)
+            spreadsheetSetCellValue(mySheet, Phone, i+1, 5)
+            spreadsheetSetCellValue(mySheet, DOB, i+1, 6)
+            spreadsheetSetCellValue(mySheet, Role, i+1, 7)
+            spreadsheetSetCellValue(mySheet, Result, i+1, 8)
+            i++
+        }
 
         cfheader( name="Content-Disposition", value="inline;filename=Upload_Result.xlsx" );
         cfcontent( variable=SpreadSheetReadBinary(mySheet), type="application/vnd.ms-excel" );
-
     }
 }
