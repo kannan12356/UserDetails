@@ -4,6 +4,15 @@
     returnVariable="userDetails">
 </cfinvoke>
 
+<cfif structKeyExists(form, "upload")>
+    <cfinvoke 
+        component="cfc/userDetails"
+        method="addData"
+        returnVariable="addResult">
+        <cfinvokeargument name="file" value="#form.file#">
+    </cfinvoke>
+    <cflocation  url="index.cfm" addToken="false">
+</cfif>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -23,7 +32,7 @@
                 <a href="cfc/userDetails.cfc?method=downloadData"><button class="btn btn-primary btn-sm">Template with data</button></a>
             </div>
             <form action="" method="post" enctype="multipart/form-data">
-                <input type="file" id="file" name="file"  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+                <input type="file" id="file" name="file"  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required/>
                 <input class="btn btn-secondary btn-sm" type="button" value="Browse" onclick="document.getElementById('file').click();" />
                 <button type="submit" name="upload" class="btn btn-success btn-sm">Upload</button>
             </form>
@@ -48,7 +57,7 @@
                             <td>#Address#</td>
                             <td>#Email#</td>
                             <td>#Phone#</td>
-                            <td>#DOB#</td>
+                            <td>#dateFormat(DOB, "dd-mm-YYYY")#</td>
                             <td>#Role#</td>
                         </tr>
                     </cfoutput>
