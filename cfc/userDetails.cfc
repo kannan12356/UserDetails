@@ -43,7 +43,7 @@ component{
         data = arrayToQuery(data);
 
         data.sort(function(obj1, obj2){
-            return compare(obj1.Result, obj2.Result);
+            return compare(obj1.Success, obj2.Success);
         });
 
         var excelSheet = SpreadsheetNew("UserDetails",true);
@@ -105,6 +105,7 @@ component{
                 userDetail.Phone = Phone;
                 userDetail.DOB = dateFormat(DOB, "dd-mm-YYYY");
                 userDetail.Role = Role;
+                userDetail.Success = 0;
                 
                 if(Email != ""){
                     var emailCheck = queryExecute("Select * from Users Where Email = :email",
@@ -170,6 +171,7 @@ component{
                                 }, {result="addUserResult"});                        
 
                                 var statusErrorAdd = arrayAppend(result, "Success");
+                                userDetail.success = 1;
                             }                            
                         }
 
