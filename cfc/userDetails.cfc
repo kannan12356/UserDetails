@@ -99,10 +99,7 @@ component{
                             var RoleErrorAdd = arrayAppend(result, "Role is missing");
                         }
                         if(FirstName != "" AND LastName != "" AND Address != "" AND Phone != "" AND DOB != "" AND Role != ""){
-                            var statusErrorAdd = arrayAppend(result, "Success");
-
                             var RoleArray = listToArray(Role);
-
                             var Roles = arrayNew(1);
 
                             for(i=1; i<=arrayLen(RoleArray); i++){
@@ -114,23 +111,30 @@ component{
                                 if(roleCheckResult.recordCount == 1){
                                     arrayAppend(Roles, RoleArray[i]);
                                 }
+                                else{
+                                    var RoleErrorAdd = arrayAppend(result, "Role not matched in database");
+                                }
                             }
-                            
-                            Role = arrayToList(Roles, ",");
 
-                            var insertData = queryExecute("INSERT into Users 
-                            (FirstName, LastName, Address, Email, Phone, DOB, Role) 
-                            Values 
-                            (:fName, :lName, :address, :email, :phone, :DOB, :Role)",
-                            {
-                                fName={cfsqltype:"cf_sql_nvarchar", value:FirstName},
-                                lName={cfsqltype:"cf_sql_nvarchar", value:LastName},
-                                address={cfsqltype:"cf_sql_nvarchar", value:Address},
-                                email={cfsqltype:"cf_sql_nvarchar", value:Email},
-                                phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
-                                DOB={cfsqltype:"cf_sql_date", value:DOB},
-                                Role={cfsqltype:"cf_sql_nvarchar", value:Role}
-                            }, {result="addUserResult"});                        
+                            if(!arrayIsEmpty(Roles)){                                
+                                Role = arrayToList(Roles, ",");
+
+                                var insertData = queryExecute("INSERT into Users 
+                                (FirstName, LastName, Address, Email, Phone, DOB, Role) 
+                                Values 
+                                (:fName, :lName, :address, :email, :phone, :DOB, :Role)",
+                                {
+                                    fName={cfsqltype:"cf_sql_nvarchar", value:FirstName},
+                                    lName={cfsqltype:"cf_sql_nvarchar", value:LastName},
+                                    address={cfsqltype:"cf_sql_nvarchar", value:Address},
+                                    email={cfsqltype:"cf_sql_nvarchar", value:Email},
+                                    phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
+                                    DOB={cfsqltype:"cf_sql_date", value:DOB},
+                                    Role={cfsqltype:"cf_sql_nvarchar", value:Role}
+                                }, {result="addUserResult"});                        
+
+                                var statusErrorAdd = arrayAppend(result, "Success");
+                            }                            
                         }
 
                         userDetail.Result = arrayToList(result, ", ");
