@@ -39,6 +39,42 @@ component{
         }, QueryNew(""));
     }
 
+    private function createExcel(required data){
+        data = arrayToQuery(data);
+
+        data.sort(function(obj1, obj2){
+            return compare(obj1.Result, obj2.Result);
+        });
+
+        var excelSheet = SpreadsheetNew("UserDetails",true);
+        SpreadSheetAddRow(excelSheet,"First Name,Last Name,Address,Email,Phone,DOB,Role,Result");
+        SpreadsheetFormatRow(excelSheet, {'bold' : 'true'}, 1);
+        
+        var i = 1
+        cfoutput( query="data" ){
+            var FirstName = data["FirstName"];
+            var LastName = data["LastName"];
+            var Address = data["Address"];
+            var Email = data["Email"];
+            var Phone = data["Phone"];
+            var DOB = data["DOB"];
+            var Role = data["Role"];
+            var Result = data["Result"];
+            if(FirstName != "" OR LastName != "" OR Address != "" OR Email != "" OR Phone != "" OR DOB != "" OR Role != ""){
+                spreadsheetSetCellValue(excelSheet, FirstName, i+1, 1)
+                spreadsheetSetCellValue(excelSheet, LastName, i+1, 2)
+                spreadsheetSetCellValue(excelSheet, Address, i+1, 3)
+                spreadsheetSetCellValue(excelSheet, Email, i+1, 4)
+                spreadsheetSetCellValue(excelSheet, Phone, i+1, 5)
+                spreadsheetSetCellValue(excelSheet, DOB, i+1, 6)
+                spreadsheetSetCellValue(excelSheet, Role, i+1, 7)
+                spreadsheetSetCellValue(excelSheet, Result, i+1, 8)
+                i++
+            }
+        }
+
+        return excelSheet;
+    }
     
     public function addData(required file){
         cffile( fileField="file", nameconflict="overwrite", destination="E:\ColdFusion\cfusion\wwwroot\UserDetails\Excel", action="upload", result="uploadFile" );
@@ -154,38 +190,7 @@ component{
 
         cffile( action="delete", file=filePath );
 
-        data = arrayToQuery(data);
-
-        data.sort(function(obj1, obj2){
-            return compare(obj1.Result, obj2.Result);
-        })
-
-        var mySheet = SpreadsheetNew("UserDetails",true);
-        SpreadSheetAddRow(mySheet,"First Name,Last Name,Address,Email,Phone,DOB,Role,Result");
-        SpreadsheetFormatRow(mySheet, {'bold' : 'true'}, 1);
-        
-        var i = 1
-        cfoutput( query="data" ){
-            var FirstName = data["FirstName"];
-            var LastName = data["LastName"];
-            var Address = data["Address"];
-            var Email = data["Email"];
-            var Phone = data["Phone"];
-            var DOB = data["DOB"];
-            var Role = data["Role"];
-            var Result = data["Result"];
-            if(FirstName != "" OR LastName != "" OR Address != "" OR Email != "" OR Phone != "" OR DOB != "" OR Role != ""){
-                spreadsheetSetCellValue(mySheet, FirstName, i+1, 1)
-                spreadsheetSetCellValue(mySheet, LastName, i+1, 2)
-                spreadsheetSetCellValue(mySheet, Address, i+1, 3)
-                spreadsheetSetCellValue(mySheet, Email, i+1, 4)
-                spreadsheetSetCellValue(mySheet, Phone, i+1, 5)
-                spreadsheetSetCellValue(mySheet, DOB, i+1, 6)
-                spreadsheetSetCellValue(mySheet, Role, i+1, 7)
-                spreadsheetSetCellValue(mySheet, Result, i+1, 8)
-                i++
-            }
-        }
+        var mySheet = createExcel(data);
 
         cfheader( name="Content-Disposition", value="inline;filename=Upload_Result.xlsx" );
         cfcontent( variable=SpreadSheetReadBinary(mySheet), type="application/vnd.ms-excel" );
