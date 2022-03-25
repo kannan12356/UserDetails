@@ -28,15 +28,16 @@ component{
     }
 
     private function arrayToQuery(data) {
-        return data.reduce(function(accumulator, element) {
-            element.each(function(key) {
-                if (!accumulator.keyExists(key)) {
-                    accumulator.addColumn(key, []);
-                }
-            });
-            accumulator.addRow(element);
-            return accumulator;
-        }, QueryNew(""));
+        var dataQuery = arrayReduce(data, function(accumulator, element) {
+                            structEach(element, function(key) {
+                                if (!accumulator.keyExists(key)) {
+                                    accumulator.addColumn(key, []);
+                                }
+                            });
+                            accumulator.addRow(element);
+                            return accumulator;
+                        }, QueryNew(""));
+        return dataQuery;
     }
 
     private function createExcel(required data){
