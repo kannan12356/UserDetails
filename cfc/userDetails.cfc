@@ -28,14 +28,14 @@ component{
     }
 
     private function arrayToQuery(data) {
-        var dataQuery = arrayReduce(data, function(accumulator, element) {
+        var dataQuery = arrayReduce(data, function(newQuery, element) {
                             structEach(element, function(key) {
-                                if (!accumulator.keyExists(key)) {
-                                    accumulator.addColumn(key, []);
+                                if (!newQuery.keyExists(key)) {
+                                    queryAddColumn(newQuery, key, []);
                                 }
                             });
-                            accumulator.addRow(element);
-                            return accumulator;
+                            queryAddRow(newQuery, element);
+                            return newQuery;
                         }, QueryNew(""));
         return dataQuery;
     }
