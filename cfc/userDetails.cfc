@@ -1,7 +1,11 @@
 component{
 
     public function getData(){
-        var userDetails = queryExecute("Select FirstName, LastName, Address, Email, Phone, DOB, Role From Users",[]);
+        var userDetails = queryExecute("Select Users.UserId, FirstName, LastName, Address, Email, Phone, 
+        DOB, roles.RoleId AS RoleId, GROUP_CONCAT(roles.Role) as Role From Users
+        INNER JOIN user_roles ON Users.UserId=user_roles.UserId
+        INNER JOIN roles ON roles.RoleId=user_roles.RoleId
+        GROUP BY users.UserId;",[]);
 
         return userDetails;
     }
@@ -40,17 +44,29 @@ component{
         return dataQuery;
     }
 
+    private function addUserRole(required Roles,required userId){
+        for(i=1; i<=arrayLen(arguments.Roles); i++){
+            var getRole = queryExecute("SELECT * FROM Roles WHERE Role = :Role",
+            {Role={cfsqltype:"cf_sql_nvarchar", value:Roles[i]}}, {result="getRoleResult"});
+
+            var insertUserRole = queryExecute("Insert into user_roles
+            (UserId, RoleId) VALUES (:userId, :roleId)",
+            {
+                userId={cfsqltype:"cf_sql_integer", value:arguments.userId},
+                roleId={cfsqltype:"cf_sql_integer", value:getRole.RoleId}
+            }, {result="userRoleAddResult"});
+        }
+    }
+
     private function createExcel(required data){
         data = arrayToQuery(data);
-
         data.sort(function(obj1, obj2){
             return compare(obj1.Success, obj2.Success);
         });
-
         var excelSheet = SpreadsheetNew("UserDetails",true);
         SpreadSheetAddRow(excelSheet,"First Name,Last Name,Address,Email,Phone,DOB,Role,Result");
         SpreadsheetFormatRow(excelSheet, {'bold' : 'true'}, 1);
-        
+
         var i = 1
         cfoutput( query="data" ){
             var FirstName = data["FirstName"];
@@ -73,7 +89,6 @@ component{
                 i++
             }
         }
-
         return excelSheet;
     }
     
@@ -84,11 +99,11 @@ component{
         cfspreadsheet( action="read", src="#filePath#", excludeheaderrow="true", headerrow=1, query="excelData" );
 
         var data = arrayNew(1);
-        
+        var emails = arrayNew(1);
         cfoutput( query="excelData" ){
             var userDetail = structNew();
             var result = arrayNew(1);
-
+            
             var FirstName = excelData["First Name"];
             var LastName = excelData["Last Name"];
             var Address = excelData["Address"];
@@ -97,7 +112,7 @@ component{
             var DOB = excelData["DOB"];
             DOB = dateFormat(DOB, "YYYY-mm-dd");
             var Role = excelData["Role"];
-
+            
             if(FirstName != "" OR LastName != "" OR Address != "" OR Email != "" OR Phone != "" OR DOB != "" OR Role != ""){
                 userDetail.FirstName = FirstName;
                 userDetail.LastName = LastName;
@@ -113,11 +128,9 @@ component{
                     {
                         email={cfsqltype:"cf_sql_nvarchar", value:email}
                     }, {result="emailCheckResult"});
-
                     var recordCount = emailCheckResult.recordCount;
                     
                     if(recordCount == 0){
-
                         if(FirstName == ""){
                             var fNameErrorAdd = arrayAppend(result, "First name is missing");
                         }
@@ -139,13 +152,13 @@ component{
                         if(FirstName != "" AND LastName != "" AND Address != "" AND Phone != "" AND DOB != "" AND Role != ""){
                             var RoleArray = listToArray(Role);
                             var Roles = arrayNew(1);
-
+                            
                             for(i=1; i<=arrayLen(RoleArray); i++){
                                 var roleCheck = queryExecute("Select * from Roles Where Role = :role",
                                 {
                                     role={cfsqltype:"cf_sql_nvarchar", value:RoleArray[i]}
                                 }, {result="roleCheckResult"});
-
+                                
                                 if(roleCheckResult.recordCount == 1){
                                     arrayAppend(Roles, RoleArray[i]);
                                 }
@@ -153,33 +166,72 @@ component{
                                     var RoleErrorAdd = arrayAppend(result, "Role not matched in database");
                                 }
                             }
-
-                            if(!arrayIsEmpty(Roles)){                                
-                                Role = arrayToList(Roles, ",");
-
+                            
+                            if(!arrayIsEmpty(Roles)){          
+                                var addEmail = arrayAppend(emails, Email);
                                 var insertData = queryExecute("INSERT into Users 
-                                (FirstName, LastName, Address, Email, Phone, DOB, Role) 
+                                (FirstName, LastName, Address, Email, Phone, DOB) 
                                 Values 
-                                (:fName, :lName, :address, :email, :phone, :DOB, :Role)",
+                                (:fName, :lName, :address, :email, :phone, :DOB)",
                                 {
                                     fName={cfsqltype:"cf_sql_nvarchar", value:FirstName},
                                     lName={cfsqltype:"cf_sql_nvarchar", value:LastName},
                                     address={cfsqltype:"cf_sql_nvarchar", value:Address},
                                     email={cfsqltype:"cf_sql_nvarchar", value:Email},
                                     phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
-                                    DOB={cfsqltype:"cf_sql_date", value:DOB},
-                                    Role={cfsqltype:"cf_sql_nvarchar", value:Role}
-                                }, {result="addUserResult"});                        
-
+                                    DOB={cfsqltype:"cf_sql_date", value:DOB}
+                                }, {result="addUserResult"});  
+                                var lastInsertId = addUserResult.generatedKey;
+                                var addUserRoles = addUserRole(Roles, lastInsertId);                                
                                 var statusErrorAdd = arrayAppend(result, "Success");
                                 userDetail.success = 1;
                             }                            
                         }
-
                         userDetail.Result = arrayToList(result, ", ");
                     }
                     else{
-                        var statusErrorAdd = arrayAppend(result, "Email already existed");                        
+                        var RoleArray = listToArray(Role);
+                        var Roles = arrayNew(1);
+
+                        for(i=1; i<=arrayLen(RoleArray); i++){
+                            var roleCheck = queryExecute("Select * from Roles Where Role = :role",
+                            {
+                                role={cfsqltype:"cf_sql_nvarchar", value:RoleArray[i]}
+                            }, {result="roleCheckResult"});
+
+                            if(roleCheckResult.recordCount == 1){
+                                arrayAppend(Roles, RoleArray[i]);
+                            }
+                            else{
+                                var RoleErrorAdd = arrayAppend(result, "Role not matched in database");
+                            }
+                        }
+                        if(!arrayIsEmpty(Roles)){                         
+                            if(!arrayContains(emails, Email)){
+                                var addEmail = arrayAppend(emails, Email);
+                                var getUserId = getData();
+                                var updateData = queryExecute("UPDATE Users SET
+                                FirstName=:fName, LastName=:lName, Address=:address, Email=:email,
+                                Phone=:phone, DOB=:DOB WHERE email=:email",
+                                {
+                                    fName={cfsqltype:"cf_sql_nvarchar", value:FirstName},
+                                    lName={cfsqltype:"cf_sql_nvarchar", value:LastName},
+                                    address={cfsqltype:"cf_sql_nvarchar", value:Address},
+                                    email={cfsqltype:"cf_sql_nvarchar", value:Email},
+                                    phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
+                                    DOB={cfsqltype:"cf_sql_date", value:DOB}
+                                }, {result="updateResult"});
+                                var userId = getUserId.UserId;
+                                var deleteRoles = queryExecute("DELETE from user_roles WHERE UserId=:userId",
+                                {userId={cfsqltype:"cf_sql_integer", value:userId}}, {result="deleteRoleResult"});
+                                var addUserRoles = addUserRole(Roles, userId);
+                                var statusErrorAdd = arrayAppend(result, "Updated");
+                                userDetail.success = 1;
+                            }
+                            else{
+                                var statusErrorAdd = arrayAppend(result, "Email id already existed");
+                            }  
+                        }
                         userDetail.Result = arrayToList(result, ", ");
                     }
                 }
@@ -190,11 +242,8 @@ component{
             }            
             addArray = arrayAppend(data, userDetail);
         }
-
         cffile( action="delete", file=filePath );
-
         var mySheet = createExcel(data);
-
         cfheader( name="Content-Disposition", value="inline;filename=Upload_Result.xlsx" );
         cfcontent( variable=SpreadSheetReadBinary(mySheet), type="application/vnd.ms-excel" );
     }
