@@ -192,7 +192,7 @@ component{
                     else{
                         var RoleArray = listToArray(Role);
                         var Roles = arrayNew(1);
-
+                        
                         for(i=1; i<=arrayLen(RoleArray); i++){
                             var roleCheck = queryExecute("Select * from Roles Where Role = :role",
                             {
@@ -209,7 +209,6 @@ component{
                         if(!arrayIsEmpty(Roles)){                         
                             if(!arrayContains(emails, Email)){
                                 var addEmail = arrayAppend(emails, Email);
-                                var getUserId = getData();
                                 var updateData = queryExecute("UPDATE Users SET
                                 FirstName=:fName, LastName=:lName, Address=:address, Email=:email,
                                 Phone=:phone, DOB=:DOB WHERE email=:email",
@@ -221,10 +220,15 @@ component{
                                     phone={cfsqltype:"cf_sql_nvarchar", value:Phone},
                                     DOB={cfsqltype:"cf_sql_date", value:DOB}
                                 }, {result="updateResult"});
+                                
+                                var getUserId =  queryExecute("SELECT UserId FROM Users WHERE email=:email",
+                                {email={cfsqltype:"cf_sql_nvarchar", value:email}},{result="getUserIdResult"})
                                 var userId = getUserId.UserId;
+
                                 var deleteRoles = queryExecute("DELETE from user_roles WHERE UserId=:userId",
                                 {userId={cfsqltype:"cf_sql_integer", value:userId}}, {result="deleteRoleResult"});
                                 var addUserRoles = addUserRole(Roles, userId);
+                                
                                 var statusErrorAdd = arrayAppend(result, "Updated");
                                 userDetail.success = 1;
                             }
