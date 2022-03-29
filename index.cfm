@@ -26,6 +26,7 @@
 </head>
 <body>
     <main>
+        <h4>USER INFORMATION</h4>
         <div class="buttons">
             <div class="dwnld-buttons">
                 <a href="cfc/userDetails.cfc?method=downloadPlainTemplate"><button class="btn btn-info btn-sm">Plain Template</button></a>
