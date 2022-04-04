@@ -46,14 +46,11 @@ component{
 
     private function addUserRole(required Roles,required userId){
         for(i=1; i<=arrayLen(arguments.Roles); i++){
-            var getRole = queryExecute("SELECT * FROM Roles WHERE Role = :Role",
-            {Role={cfsqltype:"cf_sql_nvarchar", value:Roles[i]}}, {result="getRoleResult"});
-
             var insertUserRole = queryExecute("Insert into user_roles
-            (UserId, RoleId) VALUES (:userId, :roleId)",
+            (UserId, RoleId) VALUES (:userId, (select RoleId from roles WHERE Role=:Role))",
             {
                 userId={cfsqltype:"cf_sql_integer", value:arguments.userId},
-                roleId={cfsqltype:"cf_sql_integer", value:getRole.RoleId}
+                Role={cfsqltype:"cf_sql_nvarchar", value:Roles[i]}
             }, {result="userRoleAddResult"});
         }
     }
